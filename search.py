@@ -13,13 +13,13 @@ def get_score(a_list):
     score = 0
     for a in a_list:
         score = score + score_dict[a]
-    return str(score)
+    return score
 
 # words is a list of dictionary
 def to_text(words):
     text = ""
     for word in words:
-        added = ':'.join([word["word"], word["score"]])
+        added = ':'.join([word["word"], str(word["score"])])
         text = text + added + "\n"
     return text
 
@@ -79,7 +79,7 @@ def find_words(words, letters, curr, constraint=None):
         if flag:
             score = get_score([l for l in used if l not in curr_list])
             result.append({"word": word, "score": score})
-            sorted_result = sorted(result, key=lambda k: k['score']) 
+            sorted_result = sorted(result, key=lambda k: k['score'], reverse=True) 
     return to_text(sorted_result)
 
 
