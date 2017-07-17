@@ -5,6 +5,24 @@ import json
 
 # app functions
 
+# dictionary for letter scores
+score_dict = {"a": 1, "b": 4, "c":4, "d":2, "e":1, "f":4, "g":3,"h":3, "i":1, "j":10, "k":5, "l":2, 
+"m":4, "n":2, "o":1, "p":4,"q": 10, "r":1, "s":1, "t":1, "u":4, "v":5, "w":4, "x":8, "y":3, "z":10}
+
+def get_score(a_list):
+    score = 0
+    for a in a_list:
+        score = score + score_dict[a]
+    return str(score)
+
+# words is a list of dictionary
+def to_text(words):
+    text = ""
+    for word in words:
+        added = ':'.join([word["word"], word["score"]])
+        text = text + added + "\n"
+    return text
+
 def get_words(query):
     # datamuse api, sp: spelling constraints, return 1000 words
     api = "https://api.datamuse.com/words?max=1000&sp="
@@ -27,7 +45,8 @@ def get_words(query):
 
 
 def find_words(words, letters, curr, constraint=None):
-    result = ""
+    curr_list = list(curr)
+    result = []
     if "?" in letters:
         wildcard = True
         wildcard_used = False
@@ -39,7 +58,8 @@ def find_words(words, letters, curr, constraint=None):
         words = [w for w in words if len(w) <= max_len]
 
     for word in words:
-        letters_temp = letters+list(curr)
+        used = []
+        letters_temp = letters+curr_list
         flag = True
         for l in word:
             if len(letters_temp)>0:
@@ -52,12 +72,15 @@ def find_words(words, letters, curr, constraint=None):
                         break
                 else:
                     letters_temp.remove(l)
+                    used.append(l)
             else:
                 flag = False
                 break
         if flag:
-            result = " ".join([result, word])
-    return result
+            score = get_score([l for l in used if l not in curr_list])
+            result.append({"word": word, "score": score})
+            sorted_result = sorted(result, key=lambda k: k['score']) 
+    return to_text(sorted_result)
 
 
 # UI part
@@ -76,7 +99,7 @@ class App:
         Label(frame, text="How many empty cells do you have before/after your desire position? (optional)").grid(row=3, sticky=W)
         Label(frame, text="\n The results we find for you:").grid(row=5, sticky=W)
         self.answer = Message(frame, width=500)
-        self.answer.grid(row=6)
+        self.answer.grid(row=6, sticky=W)
 
         # input fields
         self.e1 = Entry(frame)
@@ -97,7 +120,7 @@ class App:
         self.e2.delete(0, 'end')
         self.e3.delete(0, 'end')
         self.error.config(text="")
-        self.answer.config(text="")
+        self.answer.config(text="", fg="black")
     
     def check_input(self, letters):
         for l in letters:
